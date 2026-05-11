@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voice Test</title>
+<style>
+  body { background:#111; color:#fff; font-family: -apple-system, sans-serif; padding:40px 20px; max-width:480px; margin:0 auto; }
+  input { width:100%; padding:14px; font-size:15px; border-radius:10px; border:1px solid #444; background:#222; color:#fff; box-sizing:border-box; margin-bottom:16px; }
+  button { width:100%; padding:16px; font-size:17px; font-weight:600; background:#fff; color:#111; border:none; border-radius:12px; cursor:pointer; }
+  #status { margin-top:20px; text-align:center; color:#aaa; font-size:14px; }
+</style>
+</head>
+<body>
+<h2>🎙️ Voice Sample</h2>
+<input type="password" id="apiKey" placeholder="Paste ElevenLabs API key">
+<input type="text" id="voiceId" value="9m2QKYD6cd1V4SNdqWIZ" placeholder="Voice ID">
+<input type="text" id="sampleText" value="Hello, this is Liam Payne. One Direction forever, yeah? Thanks for all the love." placeholder="Sample text">
+<button onclick="generate()">▶ Generate &amp; Play</button>
+<button onclick="listVoices()" style="margin-top:10px;background:#333;color:#fff;">📋 List My Voices</button>
+<div id="status"></div>
+<div id="voice-list" style="margin-top:16px;font-size:13px;color:#ccc;line-height:1.8;"></div>
+<audio id="player" controls style="width:100%;margin-top:20px;display:none"></audio>
+
+<script>
+async function listVoices() {
+  const key = document.getElementById('apiKey').value.trim();
+  const status = document.getElementById('status');
+  const list = document.getElementById('voice-list');
+  if (!key) { status.textContent = 'Paste your API key first.'; return; }
+  status.textContent = 'Loading voices...';
+  try {
+    const res = await fetch('https://api.elevenlabs.io/v1/voices', { headers: { 'xi-api-key': key } });
+    const d = await res.json();
+    status.textContent = '';
+    list.innerHTML = (d.voices || []).map(v => `<div><b>${v.name}</b><br><small style="color:#888">${v.voice_id}</small></div><hr style="border-color:#333">`).join('');
+  } catch(e) { status.textContent = 'Error: ' + e.message; }
+}
+
+async function generate() {
+  const key = document.getElementById('apiKey').value.trim();
+  const voiceId = document.getElementById('voiceId').value.trim();
+  const text = document.getElementById('sampleText').value.trim();
+  const status = document.getElementById('status');
+  const player = document.getElementById('player');
+
+  if (!key) { status.textContent = 'Paste your API key first.'; return; }
+  status.textContent = 'Generating...';
+
+  try {
+    const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+      method: 'POST',
+      headers: { 'xi-api-key': key, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, model_id: 'eleven_multilingual_v2' })
+    });
+    if (!res.ok) { const e = await res.json(); status.textContent = 'Error: ' + (e.detail?.message || res.status); return; }
+    const blob = await res.blob();
+    player.src = URL.createObjectURL(blob);
+    player.style.display = 'block';
+    player.play();
+    status.textContent = 'Playing ▶';
+  } catch(e) {
+    status.textContent = 'Error: ' + e.message;
+  }
+}
+</script>
+</body>
+</html>

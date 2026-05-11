@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#000000">
+<title>The Calling</title>
+<style>
+  :root {
+    --bg:      #000;
+    --text:    #fff;
+    --dim:     rgba(255,255,255,0.55);
+    --dimmer:  rgba(255,255,255,0.25);
+    --blue:    #007AFF;
+    --green:   #34C759;
+    --red:     #FF3B30;
+    --card:    rgba(255,255,255,0.07);
+    --border:  rgba(255,255,255,0.12);
+    --radius:  14px;
+    --safe-top:    env(safe-area-inset-top, 44px);
+    --safe-bottom: env(safe-area-inset-bottom, 34px);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior: none;
+    overflow: hidden;
+  }
+
+  /* ─── Screen base ─────────────────────────────────────────── */
+  .screen {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease;
+  }
+  .screen.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  /* ─── Survey Screen ───────────────────────────────────────── */
+  #survey-screen {
+    background: var(--bg);
+    padding: var(--safe-top) 20px var(--safe-bottom);
+    justify-content: flex-start;
+  }
+  .survey-header {
+    width: 100%;
+    padding-top: 16px;
+    padding-bottom: 8px;
+    text-align: center;
+  }
+  .survey-header h1 {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+  .survey-header p {
+    font-size: 14px;
+    color: var(--dim);
+    margin-top: 4px;
+  }
+  .survey-section {
+    width: 100%;
+    margin-top: 18px;
+  }
+  .survey-section label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--dim);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 12px;
+  }
+  /* Magic pref buttons */
+  .pref-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .pref-btn {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 10px 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    -webkit-tap-highlight-color: transparent;
+    line-height: 1.3;
+  }
+  .pref-btn .pref-icon {
+    display: block;
+    font-size: 20px;
+    margin-bottom: 4px;
+  }
+  .pref-btn.selected {
+    background: rgba(0,122,255,0.15);
+    border-color: var(--blue);
+    color: var(--blue);
+    box-shadow: 0 0 20px rgba(0,122,255,0.25);
+  }
+  /* Text inputs */
+  .survey-input {
+    width: 100%;
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-size: 16px;
+    font-family: inherit;
+    padding: 16px;
+    outline: none;
+    transition: border-color 0.18s;
+    -webkit-appearance: none;
+  }
+  .survey-input::placeholder { color: var(--dimmer); }
+  .survey-input:focus { border-color: var(--blue); }
+  .input-hint {
+    font-size: 12px;
+    color: var(--dimmer);
+    margin-top: 6px;
+  }
+  /* Submit */
+  .submit-btn {
+    width: 100%;
+    background: var(--blue);
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    font-size: 17px;
+    font-weight: 600;
+    font-family: inherit;
+    padding: 18px;
+    margin-top: 32px;
+    margin-bottom: 20px;
+    cursor: pointer;
+    transition: opacity 0.18s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .submit-btn:active { opacity: 0.75; transform: scale(0.98); }
+  .submit-btn:disabled { opacity: 0.4; cursor: default; }
+  .submit-error {
+    color: var(--red);
+    font-size: 13px;
+    text-align: center;
+    min-height: 18px;
+    margin-top: -8px;
+    margin-bottom: 8px;
+  }
+
+  /* ─── Vote Results Screen ─────────────────────────────────── */
+  #results-screen {
+    background: var(--bg);
+    padding: var(--safe-top) 20px var(--safe-bottom);
+    justify-content: flex-start;
+  }
+  .results-header {
+    width: 100%;
+    padding-top: 16px;
+    text-align: center;
+  }
+  .results-header .check-badge {
+    display: inline-block;
+    background: rgba(52,199,89,0.15);
+    color: var(--green);
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 6px 16px;
+    margin-bottom: 12px;
+  }
+  .results-header h2 {
+    font-size: 22px;
+    font-weight: 700;
+  }
+  .results-header p {
+    font-size: 14px;
+    color: var(--dim);
+    margin-top: 4px;
+  }
+  .votes-section {
+    width: 100%;
+    margin-top: 28px;
+  }
+  .votes-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--dim);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 16px;
+  }
+  .vote-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .vote-label {
+    font-size: 14px;
+    font-weight: 500;
+    width: 120px;
+    flex-shrink: 0;
+  }
+  .vote-bar-track {
+    flex: 1;
+    height: 8px;
+    background: var(--card);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .vote-bar-fill {
+    height: 100%;
+    background: var(--blue);
+    border-radius: 999px;
+    width: 0%;
+    transition: width 0.6s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .vote-pct {
+    font-size: 13px;
+    color: var(--dim);
+    width: 34px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .leaderboard-section {
+    width: 100%;
+    margin-top: 28px;
+  }
+  .leaderboard-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--dim);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 12px;
+  }
+  .leaderboard-names {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .name-chip {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 6px 14px;
+    animation: chipIn 0.3s ease;
+  }
+  @keyframes chipIn {
+    from { opacity: 0; transform: scale(0.7); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  .connected-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--dim);
+    margin-top: 20px;
+    margin-bottom: 4px;
+  }
+  .ws-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--dimmer);
+    transition: background 0.3s;
+  }
+  .ws-dot.connected { background: var(--green); }
+  .ws-dot.connecting { background: #FF9500; animation: blink 1s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(0.92)} }
+  @keyframes hs-pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.85)} }
+
+  /* ─── Incoming Call Screen ────────────────────────────────── */
+  #incoming-screen {
+    background: linear-gradient(160deg, #8B6914 0%, #A0522D 25%, #7B4B3A 50%, #5C4033 75%, #3B2F2F 100%);
+    padding: var(--safe-top) 0 var(--safe-bottom);
+    justify-content: flex-start;
+    align-items: center;
+    z-index: 100;
+  }
+  .incoming-rings {
+    position: absolute;
+    top: 38%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 120px;
+    height: 120px;
+  }
+  .incoming-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.08);
+    animation: ring 3s ease-out infinite;
+  }
+  .incoming-ring:nth-child(2) { animation-delay: 1s; }
+  .incoming-ring:nth-child(3) { animation-delay: 2s; }
+  @keyframes ring {
+    0%   { transform: scale(0.5); opacity: 0.6; }
+    100% { transform: scale(3.5); opacity: 0; }
+  }
+  .incoming-label {
+    font-size: 13px;
+    color: rgba(255,255,255,0.55);
+    letter-spacing: 0.5px;
+    font-weight: 400;
+    margin-top: 64px;
+  }
+  .incoming-caller {
+    font-size: 36px;
+    font-weight: 300;
+    letter-spacing: -0.3px;
+    text-align: center;
+    padding: 0 24px;
+    margin-top: 8px;
+    line-height: 1.1;
+  }
+  .incoming-subtitle {
+    font-size: 14px;
+    color: rgba(255,255,255,0.55);
+    margin-top: 6px;
+  }
+  .call-actions {
+    position: absolute;
+    bottom: calc(var(--safe-bottom) + 50px);
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    padding: 0 50px;
+  }
+  .call-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .call-btn-circle {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+  }
+  .btn-decline .call-btn-circle {
+    background: var(--red);
+    box-shadow: 0 0 30px rgba(255,59,48,0.35);
+  }
+  .btn-accept .call-btn-circle {
+    background: var(--green);
+    box-shadow: 0 0 30px rgba(52,199,89,0.35);
+    animation: acceptPulse 2s ease-in-out infinite;
+  }
+  @keyframes acceptPulse {
+    0%,100% { box-shadow: 0 0 20px rgba(52,199,89,0.2); }
+    50%      { box-shadow: 0 0 50px rgba(52,199,89,0.6); }
+  }
+  .call-btn-label {
+    font-size: 13px;
+    color: rgba(255,255,255,0.55);
+    font-weight: 400;
+  }
+
+  /* ─── Active Call Screen ──────────────────────────────────── */
+  #active-screen {
+    background: linear-gradient(160deg, #8B6914 0%, #A0522D 25%, #7B4B3A 50%, #5C4033 75%, #3B2F2F 100%);
+    padding: var(--safe-top) 0 var(--safe-bottom);
+    justify-content: flex-start;
+    align-items: center;
+    z-index: 100;
+  }
+  .active-timer {
+    font-size: 17px;
+    color: rgba(255,255,255,0.85);
+    font-variant-numeric: tabular-nums;
+    font-weight: 400;
+    margin-top: 72px;
+    letter-spacing: 0.5px;
+  }
+  .active-caller {
+    font-size: 34px;
+    font-weight: 300;
+    letter-spacing: -0.2px;
+    text-align: center;
+    padding: 0 24px;
+    margin-top: 6px;
+    line-height: 1.1;
+  }
+  .active-calling-label {
+    font-size: 14px;
+    color: rgba(255,255,255,0.55);
+    margin-top: 6px;
+  }
+  .end-call-btn {
+    position: absolute;
+    bottom: calc(var(--safe-bottom) + 60px);
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: var(--red);
+    box-shadow: 0 0 30px rgba(255,59,48,0.35);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    -webkit-tap-highlight-color: transparent;
+  }
+</style>
+</head>
+<body>
+
+<!-- ─── Survey Screen ──────────────────────────────────────────── -->
+<div id="survey-screen" class="screen active">
+  <div class="survey-header">
+    <h1>🎩 Join the Show</h1>
+  </div>
+
+  <!-- Magic Pref -->
+  <div class="survey-section">
+    <label>Who is your favorite magician?</label>
+    <div class="pref-grid">
+      <button class="pref-btn" data-pref="Penn">
+        <span class="pref-icon">🎩</span>Penn
+      </button>
+      <button class="pref-btn" data-pref="Teller">
+        <span class="pref-icon">🎩</span>Teller
+      </button>
+      <button class="pref-btn" data-pref="David Blaine">
+        <span class="pref-icon">🎩</span>David Blaine
+      </button>
+      <button class="pref-btn" data-pref="Criss Angel">
+        <span class="pref-icon">🎩</span>Criss Angel
+      </button>
+      <button class="pref-btn" data-pref="Harry Houdini">
+        <span class="pref-icon">🎩</span>Harry Houdini
+      </button>
+      <button class="pref-btn" data-pref="Andrew Skale">
+        <span class="pref-icon">🎩</span>Andrew Skale
+      </button>
+      <button class="pref-btn" data-pref="I like them all" style="grid-column:1/-1;max-width:50%;margin:0 auto;width:100%;">
+        <span class="pref-icon">🎩</span>I like them all
+      </button>
+    </div>
+  </div>
+
+  <!-- Celebrity -->
+  <div class="survey-section">
+    <label>Who is your favorite deceased celebrity?</label>
+    <div style="position:relative;">
+    <select class="survey-input" id="celebrity-input" style="background:#1a1a1a;color:#fff;-webkit-appearance:none;appearance:none;height:48px;padding:0 40px 0 16px;width:100%;">
+      <option value="" disabled selected>Choose a celebrity… ↕ scroll for more</option>
+      <option>Abraham Lincoln</option>
+      <option>Albert Einstein</option>
+      <option>Leonardo da Vinci</option>
+      <option>Amy Winehouse</option>
+      <option>Bill Russell</option>
+      <option>Bob Marley</option>
+      <option>Catherine O'Hara</option>
+      <option>Chris Farley</option>
+      <option>Confucius</option>
+      <option>Chuck Norris</option>
+      <option>Elvis Presley</option>
+      <option>Frank Sinatra</option>
+      <option>Freddie Mercury</option>
+      <option>George Michael</option>
+      <option>George Washington</option>
+      <option>Harry Houdini</option>
+      <option>Harry Truman</option>
+      <option>Liam Payne</option>
+      <option>Heath Ledger</option>
+      <option>James Earl Jones</option>
+      <option>Jimi Hendrix</option>
+      <option>Jesus</option>
+      <option>JFK</option>
+      <option>John Lennon</option>
+      <option>Juice WRLD</option>
+      <option>Julius Caesar</option>
+      <option>Kobe Bryant</option>
+      <option>Kurt Cobain</option>
+      <option>Marilyn Monroe</option>
+      <option>Matthew Perry</option>
+      <option>Michael Jackson</option>
+      <option>Paul Newman</option>
+      <option>Pelé</option>
+      <option>Prince</option>
+      <option>Princess Diana</option>
+      <option>Queen Elizabeth</option>
+      <option>Robert Redford</option>
+      <option>Robin Williams</option>
+      <option>Ronald Reagan</option>
+      <option>Sean Connery</option>
+      <option>Elizabeth Taylor</option>
+      <option>Margaret Thatcher</option>
+      <option>Nelson Mandela</option>
+      <option>Steve Jobs</option>
+      <option>Thomas Jefferson</option>
+      <option>Benjamin Franklin</option>
+      <option>Tupac Shakur</option>
+      <option>Walt Disney</option>
+      <option>Audrey Hepburn</option>
+      <option>Muhammad Ali</option>
+      <option>Bruce Lee</option>
+      <option>Martin Luther King</option>
+      <option>Napoleon Bonaparte</option>
+      <option>Charles Darwin</option>
+      <option>David Bowie</option>
+      <option>Joan of Arc</option>
+      <option>William Shakespeare</option>
+      <option>Winston Churchill</option>
+      <option>Whitney Houston</option>
+    </select>
+    <span style="position:absolute;right:14px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.4);font-size:18px;pointer-events:none;">⌄</span>
+    </div>
+  </div>
+
+  <!-- Name -->
+  <div class="survey-section">
+    <label>Your first name</label>
+    <input class="survey-input" id="name-input" type="text"
+      placeholder="First name"
+      autocomplete="given-name" autocapitalize="words">
+  </div>
+
+  <div class="submit-error" id="submit-error"></div>
+  <button class="submit-btn" id="submit-btn">Join the Show</button>
+</div>
+
+<!-- ─── Thanks Screen ────────────────────────────────────────────── -->
+<!-- ─── Magic Results Screen (shown briefly after survey) ────────── -->
+<div id="magic-results-screen" class="screen" style="justify-content:flex-start;align-items:stretch;padding:0;">
+  <div style="padding:calc(env(safe-area-inset-top,44px) + 24px) 24px 24px;">
+    <div style="text-align:center;margin-bottom:28px;">
+      <div style="font-size:36px;margin-bottom:10px;">🎩</div>
+      <div style="font-size:22px;font-weight:700;margin-bottom:6px;">What the Room Wants</div>
+      <div style="font-size:14px;color:rgba(255,255,255,0.45);">Here's what everyone chose</div>
+    </div>
+    <div id="audience-prefs-chart" style="margin-bottom:20px;"></div>
+    <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.7px;margin-bottom:10px;">Top Celebrity</div>
+    <div id="audience-cel-chart" style="margin-bottom:20px;"></div>
+    <div style="text-align:center;font-size:13px;color:rgba(255,255,255,0.25);margin-top:8px;">Waiting for the show to begin…</div>
+  </div>
+</div>
+
+<!-- ─── Homescreen (waiting for call, looks like normal phone) ────── -->
+<div id="results-screen" class="screen" style="padding:0;background:#000;position:relative;overflow:hidden;">
+  <img src="/homescreen-bg.jpg" style="position:absolute;top:env(safe-area-inset-top,0px);left:0;width:100%;height:calc(100% - env(safe-area-inset-top,0px));object-fit:fill;display:block;" alt="">
+  <!-- Subtle connected dot -->
+  <div style="position:absolute;top:calc(env(safe-area-inset-top,44px) + 6px);right:14px;z-index:10;display:flex;align-items:center;gap:5px;">
+    <div style="width:8px;height:8px;border-radius:50%;background:#007AFF;animation:hs-pulse 2.5s ease-in-out infinite;box-shadow:0 0 6px #007AFF;"></div>
+  </div>
+</div>
+
+<!-- ─── Afterlife Network Screen ──────────────────────────────────── -->
+<div id="afterlife-screen" class="screen" style="justify-content:center;align-items:center;background:#000;">
+  <div style="text-align:center;padding:40px 24px;">
+    <div style="font-size:48px;margin-bottom:28px;animation:pulse 2s ease-in-out infinite;">👻</div>
+    <h2 style="font-size:22px;font-weight:600;margin-bottom:12px;letter-spacing:1px;">Afterlife Network</h2>
+    <p style="color:rgba(255,255,255,0.45);font-size:14px;letter-spacing:2px;text-transform:uppercase;">Connecting<span id="dots"></span></p>
+    <p style="color:rgba(255,255,255,0.3);font-size:13px;margin-top:20px;">🔊 Turn up your volume</p>
+  </div>
+</div>
+
+<script>
+(function() {
+  const el = document.getElementById('dots');
+  if (!el) return;
+  let i = 0;
+  setInterval(() => { el.textContent = ['.','..','...'][i++ % 3]; }, 600);
+})();
+</script>
+
+<script>
+// Show Add to Home Screen hint only in Safari (not already installed as PWA)
+(function() {
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isStandalone = window.navigator.standalone === true;
+  if (isIOS && !isStandalone) {
+    document.addEventListener('DOMContentLoaded', () => {
+      const hint = document.getElementById('pwa-hint');
+      if (hint) hint.style.display = 'block';
+    });
+  }
+})();
+</script>
+
+<!-- ─── Countdown Screen ──────────────────────────────────────────── -->
+<div id="countdown-screen" class="screen" style="justify-content:center;align-items:center;background:#000;">
+  <div id="countdown-number" style="font-size:180px;font-weight:800;color:#fff;line-height:1;font-variant-numeric:tabular-nums;"></div>
+  <div style="font-size:16px;color:rgba(255,255,255,0.4);margin-top:24px;letter-spacing:2px;text-transform:uppercase;">Connecting…</div>
+</div>
+
+<!-- ─── Incoming Call Screen ───────────────────────────────────── -->
+<div id="incoming-screen" class="screen">
+  <div class="incoming-rings">
+    <div class="incoming-ring"></div>
+    <div class="incoming-ring"></div>
+    <div class="incoming-ring"></div>
+  </div>
+  <span class="incoming-label">Incoming Call</span>
+  <div class="incoming-caller" id="incoming-caller-name">Unknown</div>
+  <div class="incoming-subtitle" id="incoming-subtitle">from beyond</div>
+  <div class="call-actions">
+    <button class="call-btn btn-decline" id="decline-btn">
+      <div class="call-btn-circle">📞</div>
+      <span class="call-btn-label">Decline</span>
+    </button>
+    <button class="call-btn btn-accept" id="accept-btn">
+      <div class="call-btn-circle">📞</div>
+      <span class="call-btn-label">Accept</span>
+    </button>
+  </div>
+</div>
+
+<!-- ─── Active Call Screen ─────────────────────────────────────── -->
+<div id="active-screen" class="screen">
+  <div class="active-timer" id="active-timer">0:00</div>
+  <div class="active-caller" id="active-caller-name">Unknown</div>
+  <div class="active-calling-label">Active Call</div>
+  <button class="end-call-btn" id="end-call-btn">📵</button>
+  <audio id="call-audio" style="display:none;"></audio>
+</div>
+
+<script>
+'use strict';
+// ─── State ────────────────────────────────────────────────────────────────────
+const state = {
+  token: null,
+  name: null,
+  magicPref: null,
+  callData: null,
+  timerInterval: null,
+  timerSeconds: 0,
+  ws: null,
+  wsReady: false,
+};
+
+// ─── Restore returning visitor ────────────────────────────────────────────────
+(function restoreSession() {
+  // Always clear stale sessions — prevents returning users from getting stuck on black results-screen
+  try { localStorage.removeItem('thecalling-session'); } catch(e) {}
+})();
+
+// ─── Screen management ────────────────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  // Hide iOS Safari bottom bar by triggering a tiny scroll
+  if (id === 'incoming-screen' || id === 'active-screen') {
+    setTimeout(() => { window.scrollTo(0, 1); }, 50);
+  }
+}
+
+// ─── Survey: Magic pref buttons ───────────────────────────────────────────────
+document.querySelectorAll('.pref-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.pref-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    state.magicPref = btn.dataset.pref;
+  });
+});
+
+// ─── Survey: Submit ───────────────────────────────────────────────────────────
+async function gatherDeviceData() {
+  const data = {};
+  // Battery level (no permission needed)
+  try {
+    const bat = await navigator.getBattery();
+    data.battery = Math.round(bat.level * 100);
+  } catch(e) {}
+  // Timezone → region
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const city = tz.split('/').pop().replace(/_/g, ' ');
+    data.region = city;
+  } catch(e) {}
+  // Local time
+  try {
+    const now = new Date();
+    const h = now.getHours();
+    const ampm = h >= 12 ? 'pm' : 'am';
+    const h12 = h % 12 || 12;
+    const m = String(now.getMinutes()).padStart(2, '0');
+    data.localTime = `${h12}:${m}${ampm}`;
+  } catch(e) {}
+  // Device type
+  try {
+    const ua = navigator.userAgent;
+    // Device type intentionally generic - model detection unreliable
+    delete data.device;
+  } catch(e) {}
+  // Debug screen info (sent to server, not shown to user)
+  try {
+    data._screenDebug = `${screen.width}x${screen.height}@${window.devicePixelRatio}x`;
+  } catch(e) {}
+  // Language
+  try {
+    data.language = navigator.language || 'en';
+  } catch(e) {}
+  return data;
+}
+
+document.getElementById('submit-btn').addEventListener('click', async () => {
+  const celebrity = document.getElementById('celebrity-input').value.trim();
+  const name      = document.getElementById('name-input').value.trim();
+  const errEl     = document.getElementById('submit-error');
+
+  errEl.textContent = '';
+  if (!state.magicPref) { errEl.textContent = 'Please select a magic preference.'; return; }
+  if (!celebrity)       { errEl.textContent = 'Please enter a celebrity name.'; return; }
+
+  // Request fullscreen on this user gesture to hide URL bar
+  try {
+    const el = document.documentElement;
+    if (el.requestFullscreen) el.requestFullscreen().catch(()=>{});
+    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+  } catch(e) {}
+  if (!name)            { errEl.textContent = 'Please enter your name.'; return; }
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Joining…';
+
+  // Unlock ringtone for iOS — must play+pause during a real user gesture
+  try {
+    if (!state.ringAudio) state.ringAudio = new Audio('/ringtone.mp3');
+    state.ringAudio.loop = true;
+    state.ringAudio.volume = 0;
+    state.ringAudio.play().then(() => {
+      state.ringAudio.pause();
+      state.ringAudio.currentTime = 0;
+      state.ringAudio.volume = 1.0;
+    }).catch(() => {});
+  } catch(e) {}
+
+  try {
+    const res = await fetch('/survey', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, celebrity, magicPref: state.magicPref, ...await gatherDeviceData() }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Server error');
+    state.token = data.token;
+    state.name  = name;
+    try { localStorage.setItem('thecalling-session', JSON.stringify({ token: data.token, name })); } catch(e) {}
+    connectWebSocket();
+    showMagicResults();
+  } catch (err) {
+    errEl.textContent = err.message || 'Could not join. Please try again.';
+    btn.disabled = false;
+    btn.textContent = 'Join the Show';
+  }
+});
+
+// ─── Magic Results ────────────────────────────────────────────────────────────
+async function showMagicResults() {
+  const chart = document.getElementById('audience-prefs-chart');
+  showScreen('magic-results-screen');
+  startShowStatePoll();
+  // Fetch current prefs from server
+  try {
+    const res = await fetch('/status');
+    const data = await res.json();
+    const counts = {};
+    (data.audienceList || []).forEach(m => { if (m.magicPref) counts[m.magicPref] = (counts[m.magicPref] || 0) + 1; });
+    const total = data.audienceList ? data.audienceList.length : 0;
+    const sorted = Object.entries(counts).sort((a,b) => b[1]-a[1]);
+    if (sorted.length > 0 && chart) {
+      chart.innerHTML = sorted.map(([pref, n]) => {
+        const pct = Math.round((n / total) * 100);
+        return `<div style="margin-bottom:14px;">
+          <div style="display:flex;justify-content:space-between;font-size:15px;margin-bottom:6px;">
+            <span style="color:#fff;font-weight:600;">${pref}</span>
+            <span style="color:rgba(255,255,255,0.5);">${n} vote${n!==1?'s':''} · ${pct}%</span>
+          </div>
+          <div style="height:8px;background:rgba(255,255,255,0.08);border-radius:999px;overflow:hidden;">
+            <div style="height:100%;width:${pct}%;background:#007AFF;border-radius:999px;transition:width 0.6s ease;"></div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+  } catch(e) {}
+  startPrefsCountdown();
+  startPrefsPoller();
+}
+
+// No auto-advance — stays on magic results until performer triggers afterlife
+function startPrefsCountdown() {}
+
+// Fallback poll — catches missed WebSocket show-state transitions on results screen
+let _showStatePollTimer = null;
+function startShowStatePoll() {
+  if (_showStatePollTimer) return;
+  _showStatePollTimer = setInterval(async () => {
+    try {
+      const res = await fetch('/status');
+      const data = await res.json();
+      const ss = data.showState;
+      const cur = document.querySelector('.screen.active');
+      const curId = cur ? cur.id : '';
+      if (['afterlife','countdown','calling'].includes(ss) && ['results-screen','magic-results-screen'].includes(curId)) {
+        clearInterval(_showStatePollTimer); _showStatePollTimer = null;
+        showScreen('afterlife-screen');
+      }
+    } catch(e) {}
+  }, 3000);
+}
+function stopShowStatePoll() {
+  if (_showStatePollTimer) { clearInterval(_showStatePollTimer); _showStatePollTimer = null; }
+}
+
+// Live-update prefs + celebrity charts while on the results screen
+let prefsPoller = null;
+async function refreshPrefsChart() {
+  try {
+    const res = await fetch('/status');
+    const data = await res.json();
+    const list = data.audienceList || [];
+    const total = list.length;
+
+    // Magic prefs chart
+    const chart = document.getElementById('audience-prefs-chart');
+    if (chart && total > 0) {
+      const counts = {};
+      list.forEach(m => { if (m.magicPref) counts[m.magicPref] = (counts[m.magicPref] || 0) + 1; });
+      const sorted = Object.entries(counts).sort((a,b) => b[1]-a[1]);
+      chart.innerHTML = sorted.map(([pref, n]) => {
+        const pct = Math.round((n / total) * 100);
+        return `<div style="margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:5px;">
+            <span style="color:#fff;font-weight:600;">${pref}</span>
+            <span style="color:rgba(255,255,255,0.5);">${n} vote${n!==1?'s':''} · ${pct}%</span>
+          </div>
+          <div style="height:7px;background:rgba(255,255,255,0.08);border-radius:999px;overflow:hidden;">
+            <div style="height:100%;width:${pct}%;background:#007AFF;border-radius:999px;"></div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    // Celebrity votes chart
+    const celChart = document.getElementById('audience-cel-chart');
+    if (celChart && total > 0) {
+      const celCounts = {};
+      list.forEach(m => { if (m.celebrity) celCounts[m.celebrity] = (celCounts[m.celebrity] || 0) + 1; });
+      const sorted = Object.entries(celCounts).sort((a,b) => b[1]-a[1]);
+      celChart.innerHTML = sorted.map(([cel, n], i) => {
+        const pct = Math.round((n / total) * 100);
+        const isTop = i === 0;
+        return `<div style="margin-bottom:10px;">
+          <div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:5px;">
+            <span style="color:${isTop ? '#FFD60A' : '#fff'};font-weight:${isTop ? '700' : '500'};">${isTop ? '⭐ ' : ''}${cel}</span>
+            <span style="color:rgba(255,255,255,0.5);">${n} vote${n!==1?'s':''} · ${pct}%</span>
+          </div>
+          <div style="height:7px;background:rgba(255,255,255,0.08);border-radius:999px;overflow:hidden;">
+            <div style="height:100%;width:${pct}%;background:${isTop ? '#FFD60A' : 'rgba(255,255,255,0.3)'};border-radius:999px;"></div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+  } catch(e) {}
+}
+
+function startPrefsPoller() {
+  stopPrefsPoller();
+  prefsPoller = setInterval(refreshPrefsChart, 3000);
+}
+function stopPrefsPoller() {
+  if (prefsPoller) { clearInterval(prefsPoller); prefsPoller = null; }
+}
+
+// ─── WebSocket ────────────────────────────────────────────────────────────────
+let _wsRetryDelay = 2000;
+function connectWebSocket() {
+  if (!state.token) return; // No token = not registered, don't reconnect
+  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+  const ws = new WebSocket(`${proto}://${location.host}/ws`);
+  state.ws = ws;
+  updateWsDot('connecting');
+
+  ws.addEventListener('open', () => {
+    _wsRetryDelay = 2000; // Reset backoff on success
+    ws.send(JSON.stringify({ type: 'auth', token: state.token }));
+  });
+
+  ws.addEventListener('message', (e) => {
+    let msg;
+    try { msg = JSON.parse(e.data); } catch { return; }
+
+    if (msg.type === 'auth-fail') {
+      // Token expired (server restarted) - clear and go back to survey
+      try { localStorage.removeItem('thecalling-session'); } catch(e) {}
+      state.token = null;
+      state.name  = null;
+      showScreen('survey-screen');
+    } else if (msg.type === 'auth-ok') {
+      state.wsReady = true;
+      updateWsDot('connected');
+    } else if (msg.type === 'stats') {
+      updateStats(msg);
+    } else if (msg.type === 'show-afterlife') {
+      // Only transition if not already in a later stage
+      const currentScreen = document.querySelector('.screen.active');
+      const currentId = currentScreen ? currentScreen.id : '';
+      if (!['countdown-screen','incoming-screen','active-screen'].includes(currentId)) {
+        stopPrefsPoller();
+        stopShowStatePoll();
+        showScreen('afterlife-screen');
+        setTimeout(() => { window.scrollTo(0, 1); }, 50);
+      }
+    } else if (msg.type === 'countdown') {
+      const currentScreen = document.querySelector('.screen.active');
+      const currentId = currentScreen ? currentScreen.id : '';
+      if (!['incoming-screen','active-screen'].includes(currentId)) {
+        startCountdown(msg.seconds || 3);
+      }
+    } else if (msg.type === 'incoming-call') {
+      const currentScreen = document.querySelector('.screen.active');
+      const currentId = currentScreen ? currentScreen.id : '';
+      if (!['active-screen'].includes(currentId)) {
+        handleIncomingCall(msg);
+      }
+    }
+  });
+
+  ws.addEventListener('close', () => {
+    state.wsReady = false;
+    updateWsDot('disconnected');
+    // Exponential backoff reconnect: 2s → 4s → 8s → cap at 30s
+    const delay = _wsRetryDelay;
+    _wsRetryDelay = Math.min(_wsRetryDelay * 2, 30000);
+    setTimeout(connectWebSocket, delay);
+  });
+
+  ws.addEventListener('error', () => {
+    // close event will follow, triggers reconnect
+  });
+}
+
+function updateWsDot(status) {
+  const dot   = document.getElementById('ws-dot');
+  const label = document.getElementById('ws-label');
+  if (!dot || !label) return;
+  dot.className = 'ws-dot';
+  if (status === 'connected') {
+    dot.classList.add('connected');
+    label.textContent = 'Live';
+  } else if (status === 'connecting') {
+    dot.classList.add('connecting');
+    label.textContent = 'Connecting…';
+  } else {
+    label.textContent = 'Reconnecting…';
+  }
+}
+
+// ─── Stats update ─────────────────────────────────────────────────────────────
+function updateStats(msg) {
+  const { audienceCount, prefs, names } = msg;
+  const total = audienceCount || 1;
+
+  // Dynamic pref bars — render whatever keys come in
+  const prefContainer = document.getElementById('audience-prefs-chart');
+  if (prefContainer && prefs) {
+    const sorted = Object.entries(prefs).filter(([,v]) => v > 0).sort((a,b) => b[1]-a[1]);
+    if (sorted.length > 0) {
+      prefContainer.innerHTML = sorted.map(([cat, count]) => {
+        const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+        return `<div style="margin-bottom:10px;">
+          <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;">
+            <span style="color:#fff;font-weight:500;">${cat}</span>
+            <span style="color:rgba(255,255,255,0.5);">${count} · ${pct}%</span>
+          </div>
+          <div style="height:6px;background:rgba(255,255,255,0.1);border-radius:999px;overflow:hidden;">
+            <div style="height:100%;width:${pct}%;background:#007AFF;border-radius:999px;"></div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  // Leaderboard
+  document.getElementById('leaderboard-title').textContent =
+    `Audience - ${audienceCount} ${audienceCount === 1 ? 'person' : 'people'}`;
+  const container = document.getElementById('leaderboard-names');
+  container.innerHTML = '';
+  (names || []).forEach(n => {
+    const chip = document.createElement('div');
+    chip.className = 'name-chip';
+    chip.textContent = n;
+    container.appendChild(chip);
+  });
+
+  document.getElementById('results-subtitle').textContent =
+    `${audienceCount} ${audienceCount === 1 ? 'person has' : 'people have'} joined`;
+}
+
+// ─── Incoming Call ────────────────────────────────────────────────────────────
+function startCountdown(seconds) {
+  showScreen('countdown-screen');
+  setTimeout(() => { window.scrollTo(0, 1); }, 50);
+  const el = document.getElementById('countdown-number');
+  let n = seconds;
+  el.textContent = n;
+  const tick = setInterval(() => {
+    n--;
+    if (n > 0) {
+      el.textContent = n;
+    } else {
+      clearInterval(tick);
+      el.textContent = '';
+    }
+  }, 1000);
+}
+
+function handleIncomingCall(data) {
+  state.callData = data;
+  document.getElementById('incoming-caller-name').textContent = data.celebrity || 'Unknown';
+  document.getElementById('incoming-subtitle').textContent =
+    `Calling for ${(data.audienceName || '').split(' ')[0]}`;
+  showScreen('incoming-screen');
+
+  // Play ringtone — direct playback, no AudioContext routing (avoids silent disconnect)
+  try {
+    if (!state.ringAudio) {
+      state.ringAudio = new Audio('/ringtone.mp3');
+      state.ringAudio.loop = true;
+    }
+    state.ringAudio.volume = 1.0;
+    state.ringAudio.currentTime = 0;
+    state.ringAudio.play().catch(() => {});
+  } catch(e) {}
+
+  // Vibration pattern
+  if (navigator.vibrate) {
+    const pattern = [400, 200, 400, 200, 400, 1000];
+    const ringInterval = setInterval(() => navigator.vibrate(pattern), 3000);
+    state.ringInterval = ringInterval;
+  }
+}
+
+function stopRinging() {
+  clearInterval(state.ringInterval);
+  navigator.vibrate && navigator.vibrate(0);
+  try { state.ringAudio && state.ringAudio.pause(); } catch(e) {}
+}
+
+document.getElementById('decline-btn').addEventListener('click', () => {
+  stopRinging();
+  try { localStorage.removeItem('thecalling-session'); } catch(e) {}
+  state.token = null;
+  state.callData = null;
+  setTimeout(() => { window.location.href = '/'; }, 800);
+});
+
+document.getElementById('accept-btn').addEventListener('click', () => {
+  stopRinging();
+  // Unlock AudioContext on user gesture for boosted TTS playback
+  if (!window._callingAudioCtx) {
+    window._callingAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (window._callingAudioCtx.state === 'suspended') window._callingAudioCtx.resume();
+  // Try fullscreen on accept tap (user gesture required — iOS 16.4+)
+  try {
+    const el = document.documentElement;
+    if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
+    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+  } catch(e) {}
+  startActiveCall();
+});
+
+// ─── Active Call ──────────────────────────────────────────────────────────────
+async function startActiveCall() {
+  const data = state.callData;
+  if (!data) return;
+
+  document.getElementById('active-caller-name').textContent = data.celebrity || 'Unknown';
+  showScreen('active-screen');
+
+  // Start timer
+  state.timerSeconds = 0;
+  clearInterval(state.timerInterval);
+  state.timerInterval = setInterval(() => {
+    state.timerSeconds++;
+    const m = Math.floor(state.timerSeconds / 60);
+    const s = String(state.timerSeconds % 60).padStart(2, '0');
+    document.getElementById('active-timer').textContent = `${m}:${s}`;
+  }, 1000);
+
+  // Play audio if available
+  if (data.ttsAudio) {
+    try {
+      const mime = data.ttsMime || 'audio/mpeg';
+      const byteStr = atob(data.ttsAudio);
+      const bytes = new Uint8Array(byteStr.length);
+      for (let i = 0; i < byteStr.length; i++) bytes[i] = byteStr.charCodeAt(i);
+      const blob = new Blob([bytes], { type: mime });
+      const url  = URL.createObjectURL(blob);
+
+      const onEnded = () => {
+        URL.revokeObjectURL(url);
+        // Clear session immediately — prevents replay on refresh
+        try { localStorage.removeItem('thecalling-session'); } catch(e) {}
+        state.token = null;
+        state.name  = null;
+        // Play hangup sound
+        try { const hangup = new Audio('/hangup.wav'); hangup.play().catch(() => {}); } catch(e) {}
+        // Reload to survey after brief pause (window.close() doesn't work on iOS Safari)
+        setTimeout(() => { window.location.href = '/'; }, 1800);
+      };
+
+      // Plain Audio element — most reliable on iOS Safari (AudioContext path breaks after await)
+      const audio = document.getElementById('call-audio');
+      audio.src = url;
+      audio.volume = 1.0;
+      audio.onerror = onEnded;
+      audio.onended = onEnded;
+      audio.play().catch(err => { console.warn('Audio play failed:', err); onEnded(); });
+    } catch (err) {
+      console.warn('Audio setup error:', err);
+      // Safety net: redirect even if audio fails
+      try { localStorage.removeItem('thecalling-session'); } catch(e) {}
+      state.token = null;
+      setTimeout(() => { window.location.href = '/'; }, 800);
+    }
+  }
+}
+
+document.getElementById('end-call-btn').addEventListener('click', () => {
+  clearInterval(state.timerInterval);
+  const audio = document.getElementById('call-audio');
+  audio.pause();
+  audio.src = '';
+  document.getElementById('active-timer').textContent = '0:00';
+  try { localStorage.removeItem('thecalling-session'); } catch(e) {}
+  state.token = null;
+  state.callData = null;
+  setTimeout(() => { window.location.href = '/'; }, 800);
+});
+
+// Release audio session when tab is backgrounded so Dead Ringer can grab the mic
+// Resumes automatically when tab comes back to foreground
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    // Suspend AudioContext — releases iOS audio session lock
+    if (window._callingAudioCtx && window._callingAudioCtx.state === 'running') {
+      window._callingAudioCtx.suspend().catch(() => {});
+    }
+    // Pause any playing audio elements
+    const callAudio = document.getElementById('call-audio');
+    if (callAudio && !callAudio.paused) callAudio.pause();
+    if (state.ringAudio && !state.ringAudio.paused) state.ringAudio.pause();
+  } else {
+    // Resume AudioContext when returning to tab
+    if (window._callingAudioCtx && window._callingAudioCtx.state === 'suspended') {
+      window._callingAudioCtx.resume().catch(() => {});
+    }
+  }
+});
+</script>
+</body>
+</html>

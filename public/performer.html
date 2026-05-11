@@ -1,0 +1,1381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#000000">
+<title>The Calling — Performer</title>
+<style>
+  :root {
+    --bg:      #000;
+    --text:    #fff;
+    --dim:     rgba(255,255,255,0.55);
+    --dimmer:  rgba(255,255,255,0.25);
+    --blue:    #007AFF;
+    --green:   #34C759;
+    --orange:  #FF9500;
+    --red:     #FF3B30;
+    --card:    rgba(255,255,255,0.07);
+    --border:  rgba(255,255,255,0.12);
+    --radius:  14px;
+    --safe-top:    env(safe-area-inset-top, 44px);
+    --safe-bottom: env(safe-area-inset-bottom, 34px);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior: none;
+  }
+  body {
+    padding: var(--safe-top) 0 var(--safe-bottom);
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  /* ─── Page Header ─────────────────────────────────────────── */
+  .page-header {
+    padding: 16px 20px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+  .page-header h1 {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+  .page-header .performer-badge {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--dim);
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 4px 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* ─── Section headers ─────────────────────────────────────── */
+  .section {
+    padding: 20px 20px 0;
+  }
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--dim);
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    margin-bottom: 12px;
+  }
+
+  /* ─── Status Bar ──────────────────────────────────────────── */
+  .status-bar {
+    display: flex;
+    gap: 10px;
+    align-items: stretch;
+  }
+  .stat-card {
+    flex: 1;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 12px;
+    text-align: center;
+  }
+  .stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    line-height: 1;
+  }
+  .stat-label {
+    font-size: 11px;
+    color: var(--dim);
+    margin-top: 4px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+  .ready-badge {
+    display: inline-block;
+    background: rgba(52,199,89,0.15);
+    color: var(--green);
+    border: 1px solid rgba(52,199,89,0.3);
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 6px;
+  }
+  .not-ready-badge {
+    display: inline-block;
+    background: rgba(255,149,0,0.1);
+    color: var(--orange);
+    border: 1px solid rgba(255,149,0,0.2);
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 6px;
+  }
+
+  /* ─── TTS Progress ────────────────────────────────────────── */
+  .progress-track {
+    height: 6px;
+    background: var(--card);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-top: 10px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--blue);
+    border-radius: 999px;
+    width: 0%;
+    transition: width 0.4s ease;
+  }
+  .progress-fill.complete { background: var(--green); }
+
+  /* ─── Buttons ─────────────────────────────────────────────── */
+  .action-btn {
+    width: 100%;
+    padding: 16px;
+    border-radius: 999px;
+    border: none;
+    font-size: 16px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .action-btn:active { opacity: 0.75; transform: scale(0.98); }
+  .action-btn:disabled { opacity: 0.35; cursor: default; transform: none; }
+  .btn-primary { background: var(--blue); color: #fff; }
+  .btn-green   { background: var(--green); color: #fff; }
+  .btn-red     { background: var(--red); color: #fff; }
+  .btn-ghost   {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    color: var(--text);
+  }
+  .btn-sm {
+    padding: 10px 20px;
+    font-size: 14px;
+    border-radius: 999px;
+    border: none;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn-sm:active { opacity: 0.7; }
+
+  /* ─── Speech trigger ──────────────────────────────────────── */
+  .mic-section {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .mic-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .mic-title {
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .mic-status {
+    font-size: 12px;
+    color: var(--dim);
+  }
+  .mic-status.listening {
+    color: var(--green);
+    animation: blink 1.5s infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .mic-phrase {
+    font-size: 12px;
+    color: var(--dim);
+    background: rgba(255,255,255,0.05);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-family: 'SF Mono', monospace;
+  }
+  .mic-heard {
+    font-size: 12px;
+    color: var(--dim);
+    min-height: 16px;
+    margin-top: 6px;
+    font-style: italic;
+  }
+
+  /* ─── Delay slider ────────────────────────────────────────── */
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .slider-label {
+    font-size: 13px;
+    color: var(--dim);
+    flex-shrink: 0;
+  }
+  input[type="range"] {
+    flex: 1;
+    height: 36px;
+    accent-color: var(--blue);
+  }
+  .slider-value {
+    font-size: 13px;
+    color: var(--text);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    width: 28px;
+    text-align: right;
+  }
+
+  /* ─── Audience List ───────────────────────────────────────── */
+  .audience-list {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    max-height: 320px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .audience-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .audience-item:last-child { border-bottom: none; }
+  .audience-info { flex: 1; min-width: 0; }
+  .audience-name {
+    font-size: 15px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .audience-celebrity {
+    font-size: 12px;
+    color: var(--dim);
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .tts-status {
+    font-size: 18px;
+    flex-shrink: 0;
+    margin-left: 10px;
+  }
+  .audience-empty {
+    padding: 32px;
+    text-align: center;
+    color: var(--dim);
+    font-size: 14px;
+  }
+
+  /* ─── Config Section ──────────────────────────────────────── */
+  .config-field {
+    width: 100%;
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-size: 15px;
+    font-family: inherit;
+    padding: 14px;
+    outline: none;
+    transition: border-color 0.18s;
+    margin-bottom: 10px;
+    -webkit-appearance: none;
+  }
+  .config-field::placeholder { color: var(--dimmer); }
+  .config-field:focus { border-color: var(--blue); }
+  .config-save-btn {
+    background: var(--blue);
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: inherit;
+    padding: 14px;
+    width: 100%;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .config-save-btn:active { opacity: 0.75; }
+  .config-saved {
+    text-align: center;
+    font-size: 12px;
+    color: var(--green);
+    min-height: 18px;
+    margin-top: 8px;
+  }
+
+  /* ─── Reset ───────────────────────────────────────────────── */
+  .reset-btn {
+    background: none;
+    border: 1px solid rgba(255,59,48,0.3);
+    color: var(--red);
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    padding: 12px;
+    width: 100%;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: opacity 0.15s;
+  }
+  .reset-btn:active { opacity: 0.7; }
+
+  .divider { height: 1px; background: var(--border); margin: 20px 0 0; }
+  .spacer { height: 40px; }
+
+  /* ─── Trigger Mode Pills ──────────────────────────────────── */
+  .mode-pills {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .mode-pill {
+    flex: 1;
+    padding: 10px 6px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: var(--card);
+    color: var(--dim);
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .mode-pill.active {
+    background: var(--blue);
+    border-color: var(--blue);
+    color: #fff;
+  }
+  .voice-phrases {
+    display: none;
+    gap: 8px;
+    flex-direction: column;
+    margin-bottom: 14px;
+  }
+  .voice-phrases.visible { display: flex; }
+  .phrase-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .phrase-label {
+    font-size: 12px;
+    color: var(--dim);
+    width: 52px;
+    flex-shrink: 0;
+  }
+  .phrase-input {
+    flex: 1;
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-size: 14px;
+    font-family: inherit;
+    padding: 10px 12px;
+    outline: none;
+  }
+  .phrase-input:focus { border-color: var(--blue); }
+
+  /* ─── GO LIVE Button ──────────────────────────────────────── */
+  .go-live-btn {
+    width: 100%;
+    padding: 20px;
+    border-radius: 16px;
+    border: none;
+    background: linear-gradient(135deg, #5856D6, #007AFF);
+    color: #fff;
+    font-size: 20px;
+    font-weight: 800;
+    font-family: inherit;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.1s, opacity 0.15s;
+    margin-top: 14px;
+  }
+  .go-live-btn:active { transform: scale(0.97); opacity: 0.85; }
+
+  /* ─── Perform Overlay ─────────────────────────────────────── */
+  #perform-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    flex-direction: column;
+    background: #000;
+    transition: background 0.4s ease;
+  }
+  #perform-overlay.show { display: flex; }
+  #perform-overlay.step-1 { background: #1a0a3e; }
+  #perform-overlay.step-2 { background: #3a0000; }
+  #perform-overlay.step-done { background: #003a1a; }
+  /* Voice mode: black screen — looks like phone is off/sleeping */
+  #perform-overlay.voice-mode {
+    background: #000 !important;
+  }
+  #perform-overlay.voice-mode .perform-main { display: none; }
+  #perform-overlay.voice-mode .perform-top { background: transparent; }
+  #perform-overlay.voice-mode #perform-exit-btn {
+    position: fixed;
+    bottom: calc(env(safe-area-inset-bottom, 34px) + 24px);
+    right: 20px;
+    top: auto;
+  }
+  .voice-dot {
+    display: none;
+    position: fixed;
+    bottom: calc(env(safe-area-inset-bottom, 34px) + 28px);
+    right: 24px;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    z-index: 999;
+    transition: background 0.3s;
+  }
+  #perform-overlay.voice-mode .voice-dot { display: block; }
+  .voice-dot.vd-listening {
+    background: #30D158;
+    box-shadow: 0 0 8px #30D158;
+    animation: vd-pulse 3s ease-in-out infinite;
+  }
+  .voice-dot.vd-triggered {
+    background: #007AFF;
+    box-shadow: 0 0 10px #007AFF;
+    animation: none;
+    opacity: 1;
+  }
+  @keyframes vd-pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.8)} }
+
+  .perform-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: calc(env(safe-area-inset-top, 44px) + 12px) 20px 12px;
+    position: relative;
+    z-index: 2;
+  }
+  .perform-stat {
+    font-size: 13px;
+    color: rgba(255,255,255,0.5);
+    font-weight: 500;
+  }
+  .perform-stat strong {
+    color: rgba(255,255,255,0.9);
+    font-size: 16px;
+    font-weight: 700;
+  }
+  .perform-exit {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: rgba(255,255,255,0.6);
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    padding: 6px 14px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .perform-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0 32px;
+    text-align: center;
+    position: relative;
+    z-index: 2;
+  }
+  .perform-step-label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.4);
+    margin-bottom: 20px;
+  }
+  .perform-icon {
+    font-size: 80px;
+    margin-bottom: 24px;
+    line-height: 1;
+  }
+  .perform-title {
+    font-size: 28px;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.2;
+    margin-bottom: 12px;
+    letter-spacing: -0.5px;
+  }
+  .perform-hint {
+    font-size: 15px;
+    color: rgba(255,255,255,0.45);
+    font-weight: 500;
+  }
+  .perform-feedback {
+    font-size: 16px;
+    font-weight: 700;
+    color: #4fffb0;
+    min-height: 24px;
+    margin-top: 20px;
+  }
+
+  /* Tap mode: entire overlay is tappable */
+  #perform-overlay.tap-mode { cursor: pointer; }
+
+  /* Mic listening pulse */
+  .mic-pulse {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    margin: 0 auto 24px;
+    animation: mic-pulse 1.8s infinite;
+  }
+  @keyframes mic-pulse {
+    0%,100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,255,255,0.3); }
+    50% { transform: scale(1.05); box-shadow: 0 0 0 16px rgba(255,255,255,0); }
+  }
+  .mic-heard-perform {
+    font-size: 13px;
+    color: rgba(255,255,255,0.35);
+    min-height: 20px;
+    margin-top: 8px;
+    font-style: italic;
+  }
+
+  /* Swipe hint arrow */
+  .swipe-arrow {
+    font-size: 40px;
+    animation: swipe-bob 1.5s infinite;
+    margin-bottom: 16px;
+  }
+  @keyframes swipe-bob {
+    0%,100% { transform: translateY(0); opacity: 0.6; }
+    50% { transform: translateY(-10px); opacity: 1; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ─── Page Header ──────────────────────────────────────────────── -->
+<div class="page-header">
+  <h1>🎩 The Calling</h1>
+  <span class="performer-badge">Performer</span>
+</div>
+
+<!-- ─── Status Strip ──────────────────────────────────────────────── -->
+<div class="section" style="margin-top:14px;">
+  <div class="status-bar">
+    <div class="stat-card" style="padding:10px 8px;">
+      <div class="stat-value" style="font-size:24px;" id="stat-audience">0</div>
+      <div class="stat-label">Registered</div>
+    </div>
+    <div class="stat-card" style="padding:10px 8px;">
+      <div class="stat-value" style="font-size:24px;color:#34C759;" id="stat-connected">0</div>
+      <div class="stat-label">Live 🟢</div>
+    </div>
+    <div class="stat-card" style="padding:10px 8px;">
+      <div class="stat-value" style="font-size:18px;" id="stat-tts-text">0/0</div>
+      <div class="stat-label">TTS Ready</div>
+      <div class="not-ready-badge" id="tts-badge" style="margin-top:4px;font-size:10px;padding:2px 8px;">Not Ready</div>
+      <div class="progress-track" style="margin-top:6px;">
+        <div class="progress-fill" id="tts-progress-bar"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── GO LIVE ────────────────────────────────────────────────────── -->
+<div class="section" style="margin-top:14px;">
+  <button class="go-live-btn" id="go-live-btn">🎩 GO LIVE</button>
+</div>
+
+<!-- ─── Show Setup ─────────────────────────────────────────────────── -->
+<div class="section" style="margin-top:14px;">
+  <div class="section-label">Show Setup</div>
+
+  <!-- Trigger Mode -->
+  <div class="mode-pills">
+    <button class="mode-pill" data-mode="button" id="pill-button">👆 Button</button>
+    <button class="mode-pill" data-mode="voice" id="pill-voice">🎤 Voice</button>
+    <button class="mode-pill" data-mode="swipe" id="pill-swipe">↑ Swipe</button>
+  </div>
+
+  <!-- Voice phrases (only shown in voice mode) -->
+  <div class="voice-phrases" id="voice-phrases">
+    <div class="phrase-row">
+      <span class="phrase-label">Step 1</span>
+      <input class="phrase-input" id="phrase-step1" type="text" placeholder="e.g. afterlife" autocorrect="off" autocapitalize="none" spellcheck="false">
+    </div>
+    <div class="phrase-row">
+      <span class="phrase-label">Step 2</span>
+      <input class="phrase-input" id="phrase-step2" type="text" placeholder="e.g. ready" autocorrect="off" autocapitalize="none" spellcheck="false">
+    </div>
+  </div>
+
+  <!-- Call Delay -->
+  <div class="slider-row" style="margin-bottom:0;">
+    <span class="slider-label">Call Delay</span>
+    <input type="range" id="delay-slider" min="0" max="10" step="1" value="0">
+    <span class="slider-value" id="delay-value">0s</span>
+  </div>
+</div>
+
+<!-- ─── Voice Generation ───────────────────────────────────────────── -->
+<div class="section" style="margin-top:14px;">
+  <div class="section-label">Voice Generation</div>
+  <button class="action-btn btn-primary" id="gen-tts-btn" style="padding:13px;">
+    🎙️ Generate All TTS Audio
+  </button>
+  <div id="tts-status-msg" style="font-size:12px;color:var(--dim);margin-top:6px;text-align:center;min-height:16px;"></div>
+</div>
+
+<!-- ─── Magic Preferences ──────────────────────────────────────────── -->
+<div class="section" style="margin-top:14px;">
+  <div class="section-label">Magic Preferences</div>
+  <div id="magic-prefs-list" style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;min-height:44px;">
+    <div style="color:var(--dim);font-size:14px;text-align:center;">No responses yet</div>
+  </div>
+</div>
+
+<!-- ─── Celebrity Votes ───────────────────────────────────────────── -->
+<div class="section" style="margin-top:14px;">
+  <div class="section-label">Celebrity Votes</div>
+  <div id="celebrity-votes-list" style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;min-height:44px;">
+    <div style="color:var(--dim);font-size:14px;text-align:center;">No responses yet</div>
+  </div>
+</div>
+
+<!-- ─── Audience ───────────────────────────────────────────────────── -->
+<div class="section" style="margin-top:14px;">
+  <div class="section-label">Audience <span id="audience-count-label" style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--dim);">— 0 people</span></div>
+  <div class="audience-list" id="audience-list" style="max-height:240px;">
+    <div class="audience-empty">No audience yet</div>
+  </div>
+</div>
+
+<!-- ─── Advanced (collapsible) ────────────────────────────────────── -->
+<div class="section" style="margin-top:14px;">
+  <button id="advanced-toggle" style="width:100%;background:none;border:1px solid var(--border);border-radius:10px;color:var(--dim);font-size:13px;font-weight:600;font-family:inherit;padding:10px;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center;">
+    <span>Advanced</span><span id="advanced-arrow">›</span>
+  </button>
+  <div id="advanced-panel" style="display:none;margin-top:10px;">
+    <!-- Manual Controls -->
+    <div style="margin-bottom:14px;">
+      <div class="section-label" style="margin-bottom:8px;">Manual Controls</div>
+      <button class="action-btn" id="afterlife-btn" style="background:#5856D6;border:none;font-size:14px;font-weight:700;padding:12px;">
+        👻 Connect to Afterlife Network
+      </button>
+      <button class="action-btn" id="countdown-btn" style="background:#FF453A;border:none;font-size:14px;font-weight:700;padding:12px;margin-top:8px;">
+        🌐 START COUNTDOWN
+      </button>
+      <button class="action-btn btn-green" id="mass-call-btn" style="margin-top:8px;font-size:12px;padding:10px;opacity:0.6;">
+        📲 Manual Trigger (fallback)
+      </button>
+      <div id="call-status-msg" style="font-size:12px;color:var(--dim);margin-top:6px;text-align:center;min-height:16px;"></div>
+    </div>
+    <!-- API Keys -->
+    <div style="margin-bottom:14px;">
+      <div class="section-label" style="margin-bottom:8px;">API Keys</div>
+      <input class="config-field" id="openai-key-input" type="text" placeholder="OpenAI API Key" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
+      <input class="config-field" id="eleven-key-input" type="text" placeholder="ElevenLabs API Key" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
+      <button class="config-save-btn" id="config-save-btn">Save Keys</button>
+      <div class="config-saved" id="config-saved"></div>
+    </div>
+    <!-- Reset -->
+    <button class="reset-btn" id="reset-btn">🗑 Clear All & Reset Show</button>
+    <!-- Force Refresh -->
+    <button class="reset-btn" id="force-refresh-btn" style="margin-top:8px;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.5);">↺ Force Refresh</button>
+  </div>
+</div>
+
+<!-- ─── Perform Overlay ────────────────────────────────────────────── -->
+<div id="perform-overlay">
+  <div class="voice-dot"></div>
+  <div class="perform-top">
+    <div class="perform-stat">
+      <strong id="po-connected">0</strong> live
+      &nbsp;·&nbsp;
+      <strong id="po-registered">0</strong> reg
+    </div>
+    <button class="perform-exit" id="perform-exit-btn">✕ Exit</button>
+  </div>
+  <div class="perform-main" id="perform-main"></div>
+</div>
+
+<div style="text-align:center;padding:12px 0 4px;font-size:11px;color:rgba(255,255,255,0.2);">The Calling · v1.2.5</div>
+<div class="spacer"></div>
+
+<script>
+'use strict';
+// ─── State ────────────────────────────────────────────────────────────────────
+let statusPollTimer = null;
+let ttsPolling     = false;
+let recognition    = null;
+let micListening   = false;
+
+// ─── Config: load/save from localStorage ─────────────────────────────────────
+function loadConfig() {
+  const elevenKey = localStorage.getItem('tc_eleven_key') || '';
+  const openaiKey = localStorage.getItem('tc_openai_key') || '';
+  document.getElementById('eleven-key-input').value = elevenKey;
+  document.getElementById('openai-key-input').value = openaiKey;
+  return { elevenKey, openaiKey };
+}
+
+async function pushKeysToServer() {
+  const elevenKey = localStorage.getItem('tc_eleven_key') || '';
+  const openaiKey = localStorage.getItem('tc_openai_key') || '';
+  if (!elevenKey && !openaiKey) return;
+  try {
+    await fetch('/save-keys', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ elevenKey, openaiKey }),
+    });
+  } catch(e) {}
+}
+
+document.getElementById('config-save-btn').addEventListener('click', async () => {
+  const elevenKey = document.getElementById('eleven-key-input').value.trim();
+  const openaiKey = document.getElementById('openai-key-input').value.trim();
+  localStorage.setItem('tc_eleven_key', elevenKey);
+  localStorage.setItem('tc_openai_key', openaiKey);
+  await pushKeysToServer();
+  const msg = document.getElementById('config-saved');
+  msg.textContent = '✓ Saved';
+  setTimeout(() => msg.textContent = '', 2000);
+});
+
+loadConfig();
+pushKeysToServer(); // Push saved keys to server on load
+
+// ─── Advanced panel toggle ────────────────────────────────────────────────────
+document.getElementById('force-refresh-btn').addEventListener('click', () => {
+  window.location.href = window.location.origin + '/performer.html?v=' + Date.now();
+});
+
+document.getElementById('advanced-toggle').addEventListener('click', () => {
+  const panel = document.getElementById('advanced-panel');
+  const arrow = document.getElementById('advanced-arrow');
+  const open = panel.style.display === 'none';
+  panel.style.display = open ? 'block' : 'none';
+  arrow.textContent = open ? '⌄' : '›';
+});
+
+// ─── Delay slider ─────────────────────────────────────────────────────────────
+const delaySlider = document.getElementById('delay-slider');
+const delayValue  = document.getElementById('delay-value');
+delaySlider.addEventListener('input', () => {
+  delayValue.textContent = delaySlider.value + 's';
+});
+
+// ─── Status polling ───────────────────────────────────────────────────────────
+async function fetchStatus() {
+  try {
+    const res  = await fetch('/status');
+    const data = await res.json();
+    updateStatusUI(data);
+    return data;
+  } catch (err) {
+    console.warn('[Status] Fetch error:', err.message);
+    return null;
+  }
+}
+
+function updateStatusUI(data) {
+  const { audienceCount, connectedCount, ttsReady, ttsTotal, ttsPercent, audienceList } = data;
+  document.getElementById('stat-audience').textContent = audienceCount;
+  document.getElementById('stat-connected').textContent = connectedCount ?? 0;
+  document.getElementById('stat-tts-text').textContent = `${ttsReady}/${ttsTotal}`;
+
+  // Magic prefs breakdown
+  const prefsEl = document.getElementById('magic-prefs-list');
+  if (prefsEl && audienceList && audienceList.length > 0) {
+    const counts = {};
+    audienceList.forEach(m => { if (m.magicPref) counts[m.magicPref] = (counts[m.magicPref] || 0) + 1; });
+    const total = audienceList.length;
+    const sorted = Object.entries(counts).sort((a,b) => b[1]-a[1]);
+    prefsEl.innerHTML = sorted.map(([pref, n]) => {
+      const pct = Math.round((n / total) * 100);
+      return `<div style="margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;">
+          <span style="color:#fff;font-weight:500;">${esc(pref)}</span>
+          <span style="color:var(--dim);">${n} · ${pct}%</span>
+        </div>
+        <div style="height:6px;background:rgba(255,255,255,0.08);border-radius:999px;overflow:hidden;">
+          <div style="height:100%;width:${pct}%;background:var(--blue);border-radius:999px;"></div>
+        </div>
+      </div>`;
+    }).join('');
+  } else if (prefsEl) {
+    prefsEl.innerHTML = '<div style="color:var(--dim);font-size:14px;text-align:center;">No responses yet</div>';
+  }
+
+  // Celebrity votes breakdown
+  const celEl = document.getElementById('celebrity-votes-list');
+  if (celEl && audienceList && audienceList.length > 0) {
+    const celCounts = {};
+    audienceList.forEach(m => { if (m.celebrity) celCounts[m.celebrity] = (celCounts[m.celebrity] || 0) + 1; });
+    const total = audienceList.length;
+    const sorted = Object.entries(celCounts).sort((a,b) => b[1]-a[1]);
+    celEl.innerHTML = sorted.map(([cel, n], i) => {
+      const pct = Math.round((n / total) * 100);
+      const isTop = i === 0;
+      return `<div style="margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;">
+          <span style="color:${isTop ? '#FFD60A' : '#fff'};font-weight:${isTop ? '700' : '500'};">${isTop ? '⭐ ' : ''}${esc(cel)}</span>
+          <span style="color:var(--dim);">${n} vote${n!==1?'s':''} · ${pct}%</span>
+        </div>
+        <div style="height:6px;background:rgba(255,255,255,0.08);border-radius:999px;overflow:hidden;">
+          <div style="height:100%;width:${pct}%;background:${isTop ? '#FFD60A' : 'var(--blue)'};border-radius:999px;"></div>
+        </div>
+      </div>`;
+    }).join('');
+  } else if (celEl) {
+    celEl.innerHTML = '<div style="color:var(--dim);font-size:14px;text-align:center;">No responses yet</div>';
+  }
+
+  const bar   = document.getElementById('tts-progress-bar');
+  const badge = document.getElementById('tts-badge');
+  bar.style.width = ttsPercent + '%';
+
+  if (ttsTotal > 0 && ttsReady === ttsTotal) {
+    bar.classList.add('complete');
+    badge.className = 'ready-badge';
+    badge.textContent = '✓ READY';
+  } else {
+    bar.classList.remove('complete');
+    badge.className = 'not-ready-badge';
+    badge.textContent = ttsPercent > 0 ? `${ttsPercent}%` : 'Not Ready';
+  }
+
+  // Audience list
+  const container = document.getElementById('audience-list');
+  const countLabel = document.getElementById('audience-count-label');
+  countLabel.textContent = `— ${audienceCount} ${audienceCount === 1 ? 'person' : 'people'}`;
+
+  if (!audienceList || audienceList.length === 0) {
+    container.innerHTML = '<div class="audience-empty">No audience yet</div>';
+    return;
+  }
+
+  container.innerHTML = '';
+  for (const m of audienceList) {
+    const item = document.createElement('div');
+    item.className = 'audience-item';
+    item.innerHTML = `
+      <div class="audience-info">
+        <div class="audience-name">${esc(m.name)}</div>
+        <div class="audience-celebrity">${esc(m.celebrity)} · ${esc(m.magicPref)}</div>
+      </div>
+      <div class="tts-status">${m.ttsReady ? '✅' : '⏳'}</div>
+    `;
+    container.appendChild(item);
+  }
+}
+
+function esc(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// Start persistent background polling
+function startPolling() {
+  if (statusPollTimer) return;
+  fetchStatus();
+  statusPollTimer = setInterval(fetchStatus, 3000);
+}
+startPolling();
+
+// ─── Generate TTS ─────────────────────────────────────────────────────────────
+document.getElementById('gen-tts-btn').addEventListener('click', async () => {
+  const { elevenKey, openaiKey } = loadConfig();
+  const btn = document.getElementById('gen-tts-btn');
+  const msg = document.getElementById('tts-status-msg');
+
+  if (!elevenKey && !openaiKey) {
+    msg.style.color = '#FF3B30';
+    msg.textContent = 'Add API keys in Config section first.';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Generating…';
+  msg.style.color = 'var(--dim)';
+  msg.textContent = 'Starting TTS generation…';
+
+  try {
+    const res = await fetch('/generate-tts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ elevenKey, openaiKey }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || 'Server error');
+    }
+    msg.textContent = `Generating for ${data.total} audience member${data.total !== 1 ? 's' : ''}…`;
+    // Poll until complete
+    pollUntilDone();
+  } catch (err) {
+    msg.style.color = '#FF3B30';
+    msg.textContent = err.message;
+    btn.disabled = false;
+    btn.textContent = '🎙️ Generate All TTS Audio';
+  }
+});
+
+async function pollUntilDone() {
+  if (ttsPolling) return;
+  ttsPolling = true;
+  const msg = document.getElementById('tts-status-msg');
+  const btn = document.getElementById('gen-tts-btn');
+
+  while (ttsPolling) {
+    await new Promise(r => setTimeout(r, 2000));
+    const data = await fetchStatus();
+    if (!data) continue;
+    const { ttsReady, ttsTotal } = data;
+    if (ttsTotal > 0) {
+      msg.textContent = `${ttsReady}/${ttsTotal} voices generated…`;
+    }
+    if (ttsTotal > 0 && ttsReady >= ttsTotal) {
+      ttsPolling = false;
+      msg.style.color = 'var(--green)';
+      msg.textContent = `✓ All ${ttsTotal} voices ready!`;
+      btn.disabled = false;
+      btn.textContent = '🔄 Re-generate TTS Audio';
+    }
+  }
+}
+
+// ─── Mass Call Trigger ────────────────────────────────────────────────────────
+async function triggerMassCall() {
+  const delay = parseInt(delaySlider.value, 10) * 1000;
+  const btn   = document.getElementById('mass-call-btn');
+  const msg   = document.getElementById('call-status-msg');
+
+  btn.disabled = true;
+  btn.textContent = '📲 Triggering…';
+  msg.style.color = 'var(--dim)';
+  msg.textContent = delay > 0 ? `Calling in ${delaySlider.value}s…` : 'Calling now…';
+
+  try {
+    const res = await fetch('/trigger-mass-call', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ delay }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Server error');
+    msg.style.color = 'var(--green)';
+    msg.textContent = `✓ Sent to ${data.audienceCount} connected device${data.audienceCount !== 1 ? 's' : ''}`;
+  } catch (err) {
+    msg.style.color = '#FF3B30';
+    msg.textContent = err.message;
+  }
+
+  setTimeout(() => {
+    btn.disabled = false;
+    btn.textContent = '📲 Trigger Mass Call';
+  }, 3000);
+}
+
+document.getElementById('mass-call-btn').addEventListener('click', triggerMassCall);
+
+document.getElementById('afterlife-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('afterlife-btn');
+  const msg = document.getElementById('call-status-msg');
+  btn.disabled = true;
+  btn.textContent = 'Connecting…';
+  try {
+    const res = await fetch('/show-afterlife', { method: 'POST' });
+    const data = await res.json();
+    btn.textContent = `👻 Sent to ${data.count} device${data.count !== 1 ? 's' : ''}`;
+    msg.style.color = 'var(--dim)';
+    msg.textContent = 'Watch Live count — hit countdown when ready.';
+  } catch(err) {
+    btn.textContent = '👻 Connect to Afterlife Network';
+    btn.disabled = false;
+  }
+});
+
+document.getElementById('countdown-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('countdown-btn');
+  const msg = document.getElementById('call-status-msg');
+  btn.disabled = true;
+  btn.textContent = 'Connecting…';
+  try {
+    const res = await fetch('/start-countdown', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Server error');
+    // Show countdown on performer screen too
+    let n = 3;
+    btn.textContent = `${n}`;
+    const tick = setInterval(() => {
+      n--;
+      if (n > 0) { btn.textContent = `${n}`; }
+      else {
+        clearInterval(tick);
+        btn.textContent = '📞 Calling…';
+        msg.style.color = 'var(--green)';
+        msg.textContent = `✓ Connected to ${data.audienceCount} device${data.audienceCount !== 1 ? 's' : ''}`;
+        setTimeout(() => { btn.disabled = false; btn.textContent = '🌐 START COUNTDOWN'; }, 4000);
+      }
+    }, 1000);
+  } catch(err) {
+    msg.style.color = '#FF3B30';
+    msg.textContent = err.message;
+    btn.disabled = false;
+    btn.textContent = '🌐 START COUNTDOWN';
+  }
+});
+
+// ─── Trigger Mode ─────────────────────────────────────────────────────────────
+let triggerMode = localStorage.getItem('tc_trigger_mode') || 'button';
+
+function setMode(mode) {
+  triggerMode = mode;
+  localStorage.setItem('tc_trigger_mode', mode);
+  document.querySelectorAll('.mode-pill').forEach(p => {
+    p.classList.toggle('active', p.dataset.mode === mode);
+  });
+  const phrases = document.getElementById('voice-phrases');
+  phrases.classList.toggle('visible', mode === 'voice');
+}
+
+document.querySelectorAll('.mode-pill').forEach(p => {
+  p.addEventListener('click', () => setMode(p.dataset.mode));
+});
+setMode(triggerMode);
+
+// Load saved phrases
+const phraseStep1Input = document.getElementById('phrase-step1');
+const phraseStep2Input = document.getElementById('phrase-step2');
+phraseStep1Input.value = localStorage.getItem('tc_phrase1') || 'afterlife';
+phraseStep2Input.value = localStorage.getItem('tc_phrase2') || 'ready';
+phraseStep1Input.addEventListener('input', () => localStorage.setItem('tc_phrase1', phraseStep1Input.value));
+phraseStep2Input.addEventListener('input', () => localStorage.setItem('tc_phrase2', phraseStep2Input.value));
+
+// ─── Perform Mode ─────────────────────────────────────────────────────────────
+let performStep = 0; // 0=idle 1=afterlife sent 2=countdown done
+let performRecognition = null;
+let performMicActive = false;
+
+const overlay = document.getElementById('perform-overlay');
+const performMain = document.getElementById('perform-main');
+
+const STEPS = [
+  {
+    cls: 'step-1',
+    label: 'STEP 1 OF 2',
+    icon: '👻',
+    title: 'Connect to\nAfterlife Network',
+    hint: (mode) => mode === 'button' ? 'Tap anywhere' : mode === 'swipe' ? 'Swipe up' : `Say "${phraseStep1Input.value || 'your phrase'}"`,
+    action: sendAfterlife,
+  },
+  {
+    cls: 'step-2',
+    label: 'STEP 2 OF 2',
+    icon: '🌐',
+    title: 'Start Countdown',
+    hint: (mode) => mode === 'button' ? 'Tap anywhere' : mode === 'swipe' ? 'Swipe up' : `Say "${phraseStep2Input.value || 'your phrase'}"`,
+    action: sendCountdown,
+  },
+  {
+    cls: 'step-done',
+    label: 'COMPLETE',
+    icon: '📞',
+    title: 'Calling Everyone',
+    hint: () => 'Show is live',
+    action: null,
+  },
+];
+
+function renderPerformStep() {
+  const step = STEPS[performStep] || STEPS[STEPS.length - 1];
+  const voiceClass = triggerMode === 'voice' ? ' voice-mode' : '';
+  const tapClass = (triggerMode === 'button' || triggerMode === 'swipe') ? ' tap-mode' : '';
+  overlay.className = 'show ' + step.cls + tapClass + voiceClass;
+
+  // Update live stats
+  fetchStatus().then(data => {
+    if (data) {
+      document.getElementById('po-connected').textContent = data.connectedCount || 0;
+      document.getElementById('po-registered').textContent = data.audienceCount || 0;
+    }
+  });
+
+  let micHtml = '';
+  if (triggerMode === 'voice' && performStep < 2) {
+    micHtml = `<div class="mic-pulse">🎤</div><div class="mic-heard-perform" id="po-heard"></div>`;
+  } else if (triggerMode === 'swipe' && performStep < 2) {
+    micHtml = `<div class="swipe-arrow">↑</div>`;
+  }
+
+  performMain.innerHTML = `
+    <div class="perform-step-label">${step.label}</div>
+    ${micHtml}
+    ${triggerMode !== 'voice' || performStep >= 2 ? `<div class="perform-icon">${step.icon}</div>` : ''}
+    <div class="perform-title">${step.title.replace('\n','<br>')}</div>
+    <div class="perform-hint">${step.hint(triggerMode)}</div>
+    <div class="perform-feedback" id="po-feedback"></div>
+  `;
+}
+
+async function sendAfterlife() {
+  const fb = document.getElementById('po-feedback');
+  if (fb) fb.textContent = 'Connecting…';
+  try {
+    const res = await fetch('/show-afterlife', { method: 'POST' });
+    const data = await res.json();
+    if (fb) fb.textContent = `✓ Sent to ${data.count} device${data.count !== 1 ? 's' : ''}`;
+  } catch(e) {
+    if (fb) fb.textContent = '⚠ Error — try again';
+    return;
+  }
+  setTimeout(() => {
+    performStep = 1;
+    renderPerformStep();
+    if (triggerMode === 'voice') startPerformMic();
+  }, 800);
+}
+
+async function sendCountdown() {
+  const fb = document.getElementById('po-feedback');
+  if (fb) fb.textContent = 'Launching countdown…';
+  stopPerformMic();
+  try {
+    const delay = parseInt(delaySlider.value, 10) * 1000;
+    const res = await fetch('/start-countdown', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ delay }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Server error');
+    // Show countdown on performer overlay
+    let n = 3;
+    if (fb) fb.textContent = n;
+    const tick = setInterval(() => {
+      n--;
+      if (n > 0) { if (fb) fb.textContent = n; }
+      else {
+        clearInterval(tick);
+        performStep = 2;
+        renderPerformStep();
+        const fb2 = document.getElementById('po-feedback');
+        if (fb2) fb2.textContent = `Connected to ${data.audienceCount} device${data.audienceCount !== 1 ? 's' : ''}`;
+      }
+    }, 1000);
+  } catch(e) {
+    if (fb) fb.textContent = '⚠ Error — tap to retry';
+    performStep = 1; // Stay on step 2 to retry
+  }
+}
+
+async function advancePerformStep() {
+  if (performStep >= 2) return;
+  const step = STEPS[performStep];
+  if (step.action) await step.action();
+}
+
+// Tap mode
+overlay.addEventListener('click', (e) => {
+  if (e.target === document.getElementById('perform-exit-btn')) return;
+  if (triggerMode === 'button' || triggerMode === 'swipe') {
+    if (performStep < 2) advancePerformStep();
+  }
+});
+
+// Swipe detection
+let touchStartY = 0;
+overlay.addEventListener('touchstart', (e) => { touchStartY = e.touches[0].clientY; }, { passive: true });
+overlay.addEventListener('touchend', (e) => {
+  if (triggerMode !== 'swipe') return;
+  const dy = touchStartY - e.changedTouches[0].clientY;
+  if (dy > 60 && performStep < 2) advancePerformStep();
+}, { passive: true });
+
+// Voice recognition for perform mode
+function setVoiceDot(state) {
+  const dot = document.querySelector('.voice-dot');
+  if (!dot) return;
+  dot.classList.remove('vd-listening', 'vd-triggered');
+  if (state === 'listening') dot.classList.add('vd-listening');
+  else if (state === 'triggered') dot.classList.add('vd-triggered');
+}
+
+function startPerformMic() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return;
+  stopPerformMic();
+  performRecognition = new SR();
+  performRecognition.continuous = true;
+  performRecognition.interimResults = true;
+  performRecognition.lang = 'en-US';
+  performMicActive = true;
+  setVoiceDot('listening');
+
+  performRecognition.onresult = (e) => {
+    let heard = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) heard += e.results[i][0].transcript.toLowerCase();
+    const heardEl = document.getElementById('po-heard');
+    if (heardEl) heardEl.textContent = heard.trim();
+    const p1 = (phraseStep1Input.value || '').toLowerCase().trim();
+    const p2 = (phraseStep2Input.value || '').toLowerCase().trim();
+    // Normalize common variations before matching
+    const normalize = s => s.replace(/everybody/g, 'everyone').replace(/every one/g, 'everyone');
+    const heardN = normalize(heard);
+    // If no phrase set for a step, any recognized speech triggers it
+    if (performStep === 0 && (!p1 || heardN.includes(normalize(p1)))) {
+      if (heardEl) heardEl.textContent = '✓ Detected!';
+      setVoiceDot('triggered');
+      advancePerformStep();
+    } else if (performStep === 1 && (!p2 || heardN.includes(normalize(p2)))) {
+      if (heardEl) heardEl.textContent = '✓ Detected!';
+      setVoiceDot('triggered');
+      advancePerformStep();
+    }
+  };
+  performRecognition.onerror = (e) => { if (e.error !== 'no-speech') console.warn('[PerformMic]', e.error); };
+  performRecognition.onend = () => {
+    if (performMicActive && performStep < 2) {
+      try { performRecognition.start(); } catch(e) {}
+    }
+  };
+  try { performRecognition.start(); } catch(e) {}
+}
+
+function stopPerformMic() {
+  performMicActive = false;
+  setVoiceDot(null);
+  if (performRecognition) { try { performRecognition.stop(); } catch(e) {} performRecognition = null; }
+}
+
+// GO LIVE
+document.getElementById('go-live-btn').addEventListener('click', () => {
+  // Request fullscreen on user gesture — hides URL bar
+  try {
+    const el = document.documentElement;
+    if (el.requestFullscreen) el.requestFullscreen().catch(()=>{});
+    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+  } catch(e) {}
+  performStep = 0;
+  overlay.classList.add('show');
+  renderPerformStep();
+  if (triggerMode === 'voice') startPerformMic();
+});
+
+// Exit perform mode
+document.getElementById('perform-exit-btn').addEventListener('click', () => {
+  stopPerformMic();
+  overlay.classList.remove('show');
+  overlay.className = overlay.className.replace(/step-\S+/g, '').trim();
+});
+
+// Keep perform stats live
+setInterval(() => {
+  if (!overlay.classList.contains('show')) return;
+  fetchStatus().then(data => {
+    if (!data) return;
+    const pc = document.getElementById('po-connected');
+    const pr = document.getElementById('po-registered');
+    if (pc) pc.textContent = data.connectedCount || 0;
+    if (pr) pr.textContent = data.audienceCount || 0;
+  });
+}, 5000);
+
+// Release mic when performer backgrounds the tab — lets Dead Ringer grab the audio session
+// Resumes automatically when performer returns to this tab
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    // Stop mic recognition — releases iOS audio session so Dead Ringer can use it
+    if (performMicActive && performRecognition) {
+      try { performRecognition.stop(); } catch(e) {}
+      // Don't null performRecognition or set performMicActive=false — we'll restart on return
+    }
+  } else {
+    // Restart mic if it was active when we left
+    if (performMicActive && performStep < 2) {
+      try { if (performRecognition) performRecognition.start(); } catch(e) { startPerformMic(); }
+    }
+  }
+});
+
+// ─── Reset ────────────────────────────────────────────────────────────────────
+document.getElementById('reset-btn').addEventListener('click', async () => {
+  if (!confirm('Clear all audience members and reset the show?')) return;
+  try {
+    const res  = await fetch('/reset', { method: 'POST' });
+    const data = await res.json();
+    await fetchStatus();
+    const msg = document.getElementById('call-status-msg');
+    msg.style.color = 'var(--dim)';
+    msg.textContent = `Reset complete. ${data.cleared} audience members cleared.`;
+    setTimeout(() => msg.textContent = '', 3000);
+    // Reset TTS gen button
+    ttsPolling = false;
+    const genBtn = document.getElementById('gen-tts-btn');
+    genBtn.disabled = false;
+    genBtn.textContent = '🎙️ Generate All TTS Audio';
+    document.getElementById('tts-status-msg').textContent = '';
+  } catch (err) {
+    alert('Reset failed: ' + err.message);
+  }
+});
+</script>
+</body>
+</html>
