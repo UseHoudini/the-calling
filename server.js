@@ -3,7 +3,6 @@
 // ─── Dependencies ──────────────────────────────────────────────────────────────
 const express = require('express');
 const http    = require('http');
-const https   = require('https');
 const { WebSocketServer } = require('ws');
 const path    = require('path');
 const fs      = require('fs');
@@ -480,7 +479,7 @@ app.post('/reset', (req, res) => {
 // GET /twiml/mothers-day — Returns TwiML XML to play Frank Sinatra audio
 app.get('/twiml/mothers-day', (req, res) => {
   // Construct the full URL to the audio file (works both locally and via tunnel)
-  const audioUrl = 'https://show.andrewskale.com/frank_mothers_day.mp3';
+  const audioUrl = 'http://show.andrewskale.com/frank_mothers_day.mp3';
   
   const twiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
@@ -494,7 +493,7 @@ app.get('/twiml/mothers-day', (req, res) => {
 
 // GET /twiml/mothers-day-voicemail — For leaving message on voicemail
 app.get('/twiml/mothers-day-voicemail', (req, res) => {
-  const audioUrl = 'https://show.andrewskale.com/frank_mothers_day.mp3';
+  const audioUrl = 'http://show.andrewskale.com/frank_mothers_day.mp3';
   
   // Wait 3 seconds for voicemail beep, then play the message
   const twiml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -508,21 +507,9 @@ app.get('/twiml/mothers-day-voicemail', (req, res) => {
   console.log(`[TwiML] Served mothers-day voicemail script`);
 });
 
-// ─── HTTPS + WebSocket Server ───────────────────────────────────────────────────
-const certPath = process.env.CERT_PATH || path.join(process.env.HOME, '.houdini/certs/cert.pem');
-const keyPath = process.env.KEY_PATH || path.join(process.env.HOME, '.houdini/certs/key.pem');
-let server;
-try {
-  const sslOptions = {
-    cert: fs.readFileSync(certPath),
-    key: fs.readFileSync(keyPath)
-  };
-  server = https.createServer(sslOptions, app);
-  console.log('[HTTPS] SSL certs loaded from', certPath);
-} catch (err) {
-  console.warn('[HTTPS] Certs not found, falling back to HTTP:', err.message);
-  server = http.createServer(app);
-}
+// ─── HTTP + WebSocket Server ───────────────────────────────────────────────────
+// Note: Railway handles HTTPS at the edge; app listens on HTTP
+const server = http.createServer(app);
 const wss    = new WebSocketServer({ server, path: '/ws' });
 
 wss.on('connection', (ws, req) => {
@@ -582,7 +569,7 @@ wss.on('connection', (ws, req) => {
 
 // ─── Start ─────────────────────────────────────────────────────────────────────
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`\n🎩 The Calling server running on https://localhost:${PORT}`);
+  console.log(`\n🎩 The Calling server running on http://localhost:${PORT} (Railway handles HTTPS at edge)`);
   console.log(`   Audience: http://localhost:${PORT}/audience.html`);
   console.log(`   Performer: http://localhost:${PORT}/performer.html`);
   console.log(`   ElevenLabs key: ${storedElevenKey ? '✓ configured' : '✗ not set (use performer config)'}`);
