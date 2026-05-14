@@ -135,6 +135,9 @@ const VOICE_MAP = {
   'nikola tesla':      'Xh5OictnmgRO4dff7pLm',
   'tesla':             'Xh5OictnmgRO4dff7pLm',
   'nikolai tesla':     'Xh5OictnmgRO4dff7pLm',
+  'leonard nimoy':     'e0K1gavG8dJdPZiwQ7Np',
+  'nimoy':             'e0K1gavG8dJdPZiwQ7Np',
+  'spock':             'e0K1gavG8dJdPZiwQ7Np',
 };
 
 function findVoiceId(name) {
