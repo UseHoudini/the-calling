@@ -132,6 +132,9 @@ const VOICE_MAP = {
   'jim morrison':      'FWCNEHwbQhB1Da2r1GKI',
   'morrison':          'FWCNEHwbQhB1Da2r1GKI',
   'jim':               'FWCNEHwbQhB1Da2r1GKI',
+  'nikola tesla':      'Xh5OictnmgRO4dff7pLm',
+  'tesla':             'Xh5OictnmgRO4dff7pLm',
+  'nikolai tesla':     'Xh5OictnmgRO4dff7pLm',
 };
 
 function findVoiceId(name) {
@@ -478,8 +481,9 @@ app.post('/reset', (req, res) => {
 // ─── TwiML Endpoints (for Twilio calls) ────────────────────────────────────────
 // GET /twiml/mothers-day — Returns TwiML XML to play Frank Sinatra audio
 app.get('/twiml/mothers-day', (req, res) => {
-  // Construct the full URL to the audio file (works both locally and via tunnel)
-  const audioUrl = 'http://show.andrewskale.com/frank_mothers_day.mp3';
+  // Dynamically construct audio URL from request host (works via ngrok, Cloudflare tunnel, or localhost)
+  const host = req.get('host');
+  const audioUrl = `https://${host}/frank_mothers_day.mp3`; // Use HTTPS for ngrok compatibility
   
   const twiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
@@ -488,12 +492,44 @@ app.get('/twiml/mothers-day', (req, res) => {
 </Response>`;
   
   res.type('application/xml').send(twiml);
-  console.log(`[TwiML] Served mothers-day call script`);
+  console.log(`[TwiML] Served mothers-day call script (audio: ${audioUrl})`);
+});
+
+// GET /twiml/john-wayne-hello — Returns TwiML XML to play John Wayne hello
+app.get('/twiml/john-wayne-hello', (req, res) => {
+  const host = req.get('host');
+  const audioUrl = `https://${host}/john_wayne_hello.mp3`; // Use HTTPS for ngrok compatibility
+  
+  const twiml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Play>${audioUrl}</Play>
+  <Hangup/>
+</Response>`;
+  
+  res.type('application/xml').send(twiml);
+  console.log(`[TwiML] Served John Wayne hello (audio: ${audioUrl})`);
+});
+
+// GET /twiml/john-wayne-funny — Returns TwiML XML to play John Wayne funny message
+app.get('/twiml/john-wayne-funny', (req, res) => {
+  const host = req.get('host');
+  const audioUrl = `https://${host}/john_wayne_funny.mp3`;
+  
+  const twiml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Play>${audioUrl}</Play>
+  <Hangup/>
+</Response>`;
+  
+  res.type('application/xml').send(twiml);
+  console.log(`[TwiML] Served John Wayne funny (audio: ${audioUrl})`);
 });
 
 // GET /twiml/mothers-day-voicemail — For leaving message on voicemail
 app.get('/twiml/mothers-day-voicemail', (req, res) => {
-  const audioUrl = 'http://show.andrewskale.com/frank_mothers_day.mp3';
+  // Dynamically construct audio URL from request host (works via ngrok, Cloudflare tunnel, or localhost)
+  const host = req.get('host');
+  const audioUrl = `https://${host}/frank_mothers_day.mp3`; // Use HTTPS for ngrok compatibility
   
   // Wait 3 seconds for voicemail beep, then play the message
   const twiml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -504,7 +540,7 @@ app.get('/twiml/mothers-day-voicemail', (req, res) => {
 </Response>`;
   
   res.type('application/xml').send(twiml);
-  console.log(`[TwiML] Served mothers-day voicemail script`);
+  console.log(`[TwiML] Served mothers-day voicemail script (audio: ${audioUrl})`);
 });
 
 // ─── HTTP + WebSocket Server ───────────────────────────────────────────────────
